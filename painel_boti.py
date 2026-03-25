@@ -26,29 +26,41 @@ def run_cmd(command, title="Processando..."):
         return True
     except: return False
 
-def get_ip_info():
+def get_sys_info():
     try:
+        # IP Local
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 80))
         ip_l = s.getsockname()[0]
         s.close()
+        
+        # IP Externo
         ip_e = subprocess.getoutput("curl -s --max-time 2 https://ifconfig.me").strip() or "Off-line"
-        return ip_l, ip_e
-    except: return "Desconectado", "Off-line"
+        
+        # Uptime formatado
+        uptime = subprocess.getoutput("uptime -p").replace("up ", "")
+        
+        return ip_l, ip_e, uptime
+    except: 
+        return "Desconectado", "Off-line", "Indisponível"
 
 def exibir_logo():
     os.system('clear')
-    ip_l, ip_e = get_ip_info()
+    ip_l, ip_e, uptime = get_sys_info()
     logo = Text(r"""
-  ____   ____ _______ _____ _____           _____  _____ ____  
- |  _ \ / __ \__   __|_   _/ ____|    /\    |  __ \|_   _/ __ \ 
- | |_) | |  | | | |     | || |        /  \   | |__) | | || |  | |
- |  _ <| |  | | | |     | || |       / /\ \  |  _  /  | || |  | |
- | |_) | |__| | | |    _| || |____  / ____ \ | | \ \ _| || |__| |
- |____/ \____/  |_|   |_____\_____/_/    \_\_|  \_\_____\____/ 
+ ____  ____ _______ _____ _____           _____  _____ ____  
+|  _ \ / __ \__   __|_   _/ ____|    /\    |  __ \|_   _/ __ \ 
+| |_) | |  | | | |     | || |        /  \   | |__) | | || |  | |
+|  _ <| |  | | | |     | || |       / /\ \  |  _  /  | || |  | |
+| |_) | |__| | | |    _| || |____  / ____ \ | | \ \ _| || |__| |
+|____/ \____/  |_|   |_____\_____/_/    \_\_|  \_\_____\____/ 
     """, style="bold green")
-    console.print(Panel(logo, subtitle="[bold blue]V9.1 - PERFORMANCE & ANTI-TRAVAMENTO", border_style="bright_magenta"))
-    console.print(Panel(f"[bold cyan]🏠 IP LOCAL:[/bold cyan] {ip_l}  |  [bold magenta]🌍 IP EXTERNO:[/bold magenta] {ip_e}", expand=False))
+    
+    console.print(Panel(logo, subtitle="[bold blue]V9.2 - PERFORMANCE & ANTI-TRAVAMENTO", border_style="bright_magenta"))
+    
+    # Linha de Informações do Sistema
+    info_line = f"[bold cyan]🏠 IP LOCAL:[/bold cyan] {ip_l}  |  [bold magenta]🌍 IP EXTERNO:[/bold magenta] {ip_e}  |  [bold yellow]⏱️ LIGADO HÁ:[/bold yellow] {uptime}"
+    console.print(Panel(info_line, expand=False))
 
 def limpeza_profunda_e_segura():
     exibir_logo()
@@ -57,7 +69,7 @@ def limpeza_profunda_e_segura():
     # --- PARTE 1: FECHAMENTO SEGURO ---
     run_cmd("pkill -x chrome || true", "Encerrando Chrome com segurança")
     run_cmd("pkill -x firefox || true", "Encerrando Firefox com segurança")
-    time.sleep(2)
+    time.sleep(1)
     
     # --- PARTE 2: LIMPEZA DE APLICATIVOS ---
     run_cmd("rm -rf ~/.cache/google-chrome/*", "Limpando Cache do Chrome")
@@ -71,8 +83,8 @@ def limpeza_profunda_e_segura():
     run_cmd("sudo rm -rf /var/crash/*", "Limpando relatórios de erro (Crashes)")
     run_cmd("rm -rf ~/.local/share/Trash/*", "Esvaziando Lixeira")
     
-    console.print("\n[bold green]✅ Limpeza concluída! Sistema limpo e teclado seguro.[/bold green]")
-    time.sleep(2.5)
+    console.print("\n[bold green]✅ Limpeza concluída! Sistema limpo e estável.[/bold green]")
+    time.sleep(2)
 
 def main():
     if os.getuid() != 0:
@@ -81,55 +93,61 @@ def main():
     while True:
         try:
             exibir_logo()
-            menu = Table(title="PAINEL DE MANUTENÇÃO LINUX", title_style="bold cyan", box=None)
+            menu = Table(title="PAINEL DE MANUTENÇÃO LINUX - GRUPO BOTICÁRIO", title_style="bold cyan", box=None)
             menu.add_column("Opção", style="bold magenta"); menu.add_column("Função", style="white")
 
             items = [
                 ("1", "🌐 Rede: Reset DNS, Rotas e Conexão"),
-                ("2", "🛠️ Super Correção: Cortex XDR & Erros"),
+                ("2", "🛠️ Super Correção: Reparar DPKG & Erros"),
                 ("3", "🧹 Limpeza: Sistema & Cache (Anti-Travamento)"),
-                ("4", "☁️ Cloud: Configurar/Sincronizar GDrive"),
+                ("4", "☁️ Cloud: Configurar/Sincronizar Rclone"),
                 ("5", "🌡️ Hardware: Saúde SSD e Temperatura"),
-                ("6", "🔄 Update: Atualizar Sistema"),
+                ("6", "🔄 Update: Atualizar Sistema (APT)"),
                 ("7", "📊 Monitor: Monitorar CPU/RAM (BTOP)"),
-                ("8", "🚀 RAM: Otimizar Memória (Cache/Swap)"),
+                ("8", "🚀 RAM: Otimizar Memória (Drop Caches)"),
                 ("9", "⚡ Speedtest: Testar Velocidade"),
                 ("0", "🚪 Sair")
             ]
 
             for op, desc in items: menu.add_row(op, desc)
             console.print(menu)
-            opcao = Prompt.ask("[bold yellow]Selecione[/bold yellow]")
+            opcao = Prompt.ask("[bold yellow]Selecione uma opção[/bold yellow]")
 
             if opcao == "1":
-                run_cmd("resolvectl flush-caches && nmcli networking off && sleep 1 && nmcli networking on", "Resetando Rede")
-                time.sleep(4)
+                run_cmd("resolvectl flush-caches && nmcli networking off && sleep 1 && nmcli networking on", "Resetando Interface de Rede")
+                time.sleep(2)
             elif opcao == "2":
-                run_cmd("sudo rm -rf /var/crash/*", "Limpando erros")
-                run_cmd("sudo dpkg --configure -a", "Reparando sistema")
+                run_cmd("sudo rm -rf /var/crash/*", "Limpando logs de crash")
+                run_cmd("sudo dpkg --configure -a", "Corrigindo pacotes interrompidos")
                 time.sleep(1.5)
             elif opcao == "3":
                 limpeza_profunda_e_segura()
-            elif opcao == "4": os.system("rclone config")
+            elif opcao == "4": 
+                os.system("rclone config")
             elif opcao == "5":
-                exibir_logo(); os.system("sensors | grep 'Core'")
+                exibir_logo()
+                os.system("sensors | grep 'Core'")
                 disk = subprocess.getoutput("lsblk -dpno NAME | grep -vE 'loop|ram' | head -n1")
-                os.system(f"smartctl -H {disk} | grep 'assessment'")
+                os.system(f"sudo smartctl -H {disk} | grep 'assessment'")
                 Prompt.ask("\n[bold blue]Pressione Enter para voltar[/bold blue]")
-            elif opcao == "6": os.system("sudo apt-get update && sudo apt-get dist-upgrade -y")
-            elif opcao == "7": os.system("btop")
+            elif opcao == "6": 
+                os.system("sudo apt-get update && sudo apt-get dist-upgrade -y")
+            elif opcao == "7": 
+                os.system("btop")
             elif opcao == "8":
-                run_cmd("sync && echo 3 > /proc/sys/vm/drop_caches", "Limpando RAM")
-                run_cmd("swapoff -a && swapon -a", "Resetando Swap")
+                run_cmd("sync && echo 3 > /proc/sys/vm/drop_caches", "Limpando Cache da RAM")
+                run_cmd("swapoff -a && swapon -a", "Resetando Memória Swap")
                 console.print("[bold green]✅ RAM otimizada![/bold green]"); time.sleep(2)
             elif opcao == "9":
                 exibir_logo()
-                console.print("[bold yellow]Iniciando teste de velocidade oficial Ookla...[/bold yellow]\n")
-                # Comando atualizado para o binário oficial com aceite de licença automático
+                console.print("[bold yellow]Iniciando Speedtest Ookla...[/bold yellow]\n")
                 os.system("speedtest --accept-license --accept-gdpr")
                 Prompt.ask("\n[bold blue]Pressione Enter para voltar[/bold blue]")
-            elif opcao == "0": break
-        except KeyboardInterrupt: break
+            elif opcao == "0": 
+                console.print("[bold blue]Saindo... Até logo![/bold blue]")
+                break
+        except KeyboardInterrupt: 
+            break
 
 if __name__ == "__main__":
     main()
