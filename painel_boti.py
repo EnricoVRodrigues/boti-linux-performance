@@ -2,7 +2,6 @@
 import os
 import subprocess
 import sys
-import shutil
 import time
 import socket
 
@@ -33,16 +32,12 @@ def get_sys_info():
         s.connect(('8.8.8.8', 80))
         ip_l = s.getsockname()[0]
         s.close()
-        
         # IP Externo
         ip_e = subprocess.getoutput("curl -s --max-time 2 https://ifconfig.me").strip() or "Off-line"
-        
-        # Uptime formatado
+        # Uptime (Compacto)
         uptime = subprocess.getoutput("uptime -p").replace("up ", "")
-        
         return ip_l, ip_e, uptime
-    except: 
-        return "Desconectado", "Off-line", "Indisponível"
+    except: return "Desconectado", "Off-line", "Indisponível"
 
 def exibir_logo():
     os.system('clear')
@@ -58,33 +53,9 @@ def exibir_logo():
     
     console.print(Panel(logo, subtitle="[bold blue]V9.2 - PERFORMANCE & ANTI-TRAVAMENTO", border_style="bright_magenta"))
     
-    # Linha de Informações do Sistema
-    info_line = f"[bold cyan]🏠 IP LOCAL:[/bold cyan] {ip_l}  |  [bold magenta]🌍 IP EXTERNO:[/bold magenta] {ip_e}  |  [bold yellow]⏱️ LIGADO HÁ:[/bold yellow] {uptime}"
+    # LINHA ÚNICA COM TUDO (IPs + UPTIME)
+    info_line = f"[bold cyan]🏠 LOCAL:[/bold cyan] {ip_l}  |  [bold magenta]🌍 EXTERNO:[/bold magenta] {ip_e}  |  [bold yellow]⏱️ LIGADO:[/bold yellow] {uptime}"
     console.print(Panel(info_line, expand=False))
-
-def limpeza_profunda_e_segura():
-    exibir_logo()
-    console.print(Panel("[bold green]🧹 LIMPEZA SISTEMA & NAVEGADOR (ANTI-TRAVAMENTO)[/bold green]", border_style="green"))
-    
-    # --- PARTE 1: FECHAMENTO SEGURO ---
-    run_cmd("pkill -x chrome || true", "Encerrando Chrome com segurança")
-    run_cmd("pkill -x firefox || true", "Encerrando Firefox com segurança")
-    time.sleep(1)
-    
-    # --- PARTE 2: LIMPEZA DE APLICATIVOS ---
-    run_cmd("rm -rf ~/.cache/google-chrome/*", "Limpando Cache do Chrome")
-    run_cmd("rm -rf ~/.cache/thumbnails/*", "Limpando Miniaturas de Imagens")
-    
-    # --- PARTE 3: LIMPEZA DE SISTEMA ---
-    run_cmd("sudo apt-get autoremove -y", "Removendo pacotes desnecessários")
-    run_cmd("sudo apt-get clean", "Limpando cache de instaladores (APT)")
-    run_cmd("sudo journalctl --vacuum-time=1d", "Limpando Logs antigos (Logs > 24h)")
-    run_cmd("sudo rm -rf /tmp/*", "Limpando arquivos temporários (/tmp)")
-    run_cmd("sudo rm -rf /var/crash/*", "Limpando relatórios de erro (Crashes)")
-    run_cmd("rm -rf ~/.local/share/Trash/*", "Esvaziando Lixeira")
-    
-    console.print("\n[bold green]✅ Limpeza concluída! Sistema limpo e estável.[/bold green]")
-    time.sleep(2)
 
 def main():
     if os.getuid() != 0:
@@ -114,40 +85,21 @@ def main():
             opcao = Prompt.ask("[bold yellow]Selecione uma opção[/bold yellow]")
 
             if opcao == "1":
-                run_cmd("resolvectl flush-caches && nmcli networking off && sleep 1 && nmcli networking on", "Resetando Interface de Rede")
+                run_cmd("resolvectl flush-caches && nmcli networking off && sleep 1 && nmcli networking on", "Resetando Rede")
                 time.sleep(2)
-            elif opcao == "2":
-                run_cmd("sudo rm -rf /var/crash/*", "Limpando logs de crash")
-                run_cmd("sudo dpkg --configure -a", "Corrigindo pacotes interrompidos")
-                time.sleep(1.5)
             elif opcao == "3":
-                limpeza_profunda_e_segura()
-            elif opcao == "4": 
-                os.system("rclone config")
-            elif opcao == "5":
-                exibir_logo()
-                os.system("sensors | grep 'Core'")
-                disk = subprocess.getoutput("lsblk -dpno NAME | grep -vE 'loop|ram' | head -n1")
-                os.system(f"sudo smartctl -H {disk} | grep 'assessment'")
-                Prompt.ask("\n[bold blue]Pressione Enter para voltar[/bold blue]")
-            elif opcao == "6": 
-                os.system("sudo apt-get update && sudo apt-get dist-upgrade -y")
-            elif opcao == "7": 
-                os.system("btop")
+                # (Chama sua função de limpeza aqui se quiser, ou use comando direto)
+                run_cmd("sudo apt-get autoremove -y && sudo apt-get clean", "Limpando Sistema")
+                time.sleep(2)
+            elif opcao == "7": os.system("btop")
             elif opcao == "8":
-                run_cmd("sync && echo 3 > /proc/sys/vm/drop_caches", "Limpando Cache da RAM")
-                run_cmd("swapoff -a && swapon -a", "Resetando Memória Swap")
+                run_cmd("sync && echo 3 > /proc/sys/vm/drop_caches", "Limpando RAM")
                 console.print("[bold green]✅ RAM otimizada![/bold green]"); time.sleep(2)
             elif opcao == "9":
-                exibir_logo()
-                console.print("[bold yellow]Iniciando Speedtest Ookla...[/bold yellow]\n")
                 os.system("speedtest --accept-license --accept-gdpr")
                 Prompt.ask("\n[bold blue]Pressione Enter para voltar[/bold blue]")
-            elif opcao == "0": 
-                console.print("[bold blue]Saindo... Até logo![/bold blue]")
-                break
-        except KeyboardInterrupt: 
-            break
+            elif opcao == "0": break
+        except KeyboardInterrupt: break
 
 if __name__ == "__main__":
     main()
